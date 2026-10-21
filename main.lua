@@ -1,286 +1,583 @@
+local Configs_HUB = {
+    Cor_Hub = Color3.fromRGB(15, 15, 15),
+    Cor_Options = Color3.fromRGB(28, 28, 28),
+    Cor_Stroke = Color3.fromRGB(255, 50, 50),
+    Cor_Text = Color3.fromRGB(255, 255, 255),
+    Cor_DarkText = Color3.fromRGB(150, 150, 150),
+    Corner_Radius = UDim.new(0, 12),
+    Text_Font = Enum.Font.FredokaOne
+}
+
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local SoundService = game:GetService("SoundService")
+local LocalPlayer = Players.LocalPlayer
 
-local old = playerGui:FindFirstChild("XR7_Gaheem_UI")
-if old then old:Destroy() end
+local ClickSound = Instance.new("Sound")
+ClickSound.SoundId = "rbxassetid://6895079853"
+ClickSound.Volume = 1.5
+ClickSound.Parent = SoundService
 
-local function new(class, props, parent)
-    local obj = Instance.new(class)
-    for k, v in pairs(props or {}) do
-        obj[k] = v
-    end
-    if parent then obj.Parent = parent end
-    return obj
-end
-
-local function setClipboard(text)
-    local ok = pcall(function()
-        if setclipboard then
-            setclipboard(text)
-        elseif toclipboard then
-            toclipboard(text)
-        elseif Clipboard and Clipboard.set then
-            Clipboard.set(text)
-        else
-            error("no clipboard")
+local function Create(instance, parent, props)
+    local new = Instance.new(instance, parent)
+    if props then
+        for prop, value in pairs(props) do
+            new[prop] = value
         end
-    end)
-    return ok
+    end
+    return new
 end
 
-local function notify(text)
-    local n = new("TextLabel", {
-        AnchorPoint = Vector2.new(0.5, 0),
-        Position = UDim2.new(0.5, 0, 0, 20),
-        Size = UDim2.fromOffset(260, 36),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 38),
-        BackgroundTransparency = 0,
-        Text = text,
-        Font = Enum.Font.GothamMedium,
-        TextSize = 14,
-        TextColor3 = Color3.fromRGB(230, 230, 240),
-        TextWrapped = true,
-        ZIndex = 999,
-    }, playerGui)
-    new("UICorner", { CornerRadius = UDim.new(0, 8) }, n)
-    new("UIStroke", { Color = Color3.fromRGB(90, 90, 110) }, n)
-    task.delay(1.6, function()
-        n:Destroy()
-    end)
+local function SetProps(instance, props)
+    if instance and props then
+        for prop, value in pairs(props) do
+            instance[prop] = value
+        end
+    end
+    return instance
 end
 
-local gui = new("ScreenGui", {
-    Name = "XR7_Gaheem_UI",
+local function Corner(parent, props)
+    local new = Create("UICorner", parent)
+    new.CornerRadius = Configs_HUB.Corner_Radius
+    if props then SetProps(new, props) end
+    return new
+end
+
+local function Stroke(parent, props)
+    local new = Create("UIStroke", parent)
+    new.Color = Configs_HUB.Cor_Stroke
+    new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    new.Thickness = 2
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
+    }
+    gradient.Rotation = 0
+    gradient.Parent = new
+    coroutine.wrap(function()
+        while new.Parent do
+            gradient.Rotation = (gradient.Rotation + 2) % 360
+            RunService.RenderStepped:Wait()
+        end
+    end)()
+    if props then SetProps(new, props) end
+    return new
+end
+
+local function CreateTween(instance, prop, value, time, tweenWait)
+    local tween = TweenService:Create(instance, TweenInfo.new(time, Enum.EasingStyle.Linear), {[prop] = value})
+    tween:Play()
+    if tweenWait then
+        tween.Completed:Wait()
+    end
+end
+
+local existing = CoreGui:FindFirstChild("REDz HUB library")
+if existing then existing:Destroy() end
+
+local ScreenGui = Create("ScreenGui", CoreGui, {
+    Name = "REDz HUB library",
     ResetOnSpawn = false,
-    IgnoreGuiInset = true,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-}, playerGui)
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+})
 
-local main = new("Frame", {
-    Name = "Main",
-    AnchorPoint = Vector2.new(0.5, 0.5),
-    Position = UDim2.fromScale(0.5, 0.5),
-    Size = UDim2.fromOffset(620, 420),
-    BackgroundColor3 = Color3.fromRGB(18, 18, 22),
-    BorderSizePixel = 0,
-}, gui)
-new("UICorner", { CornerRadius = UDim.new(0, 14) }, main)
-new("UIStroke", { Color = Color3.fromRGB(70, 70, 85), Thickness = 1 }, main)
+local IntroGui = Create("ScreenGui", CoreGui, {
+    Name = "XR7_Intro",
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+})
 
-local top = new("Frame", {
-    Name = "TopBar",
-    Size = UDim2.new(1, 0, 0, 46),
-    BackgroundColor3 = Color3.fromRGB(25, 25, 32),
-    BorderSizePixel = 0,
-}, main)
-new("UICorner", { CornerRadius = UDim.new(0, 14) }, top)
+local IntroBG = Create("Frame", IntroGui, {
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BorderSizePixel = 0
+})
 
-new("TextLabel", {
-    Position = UDim2.fromOffset(16, 0),
-    Size = UDim2.new(1, -100, 1, 0),
+local IntroText = Create("TextLabel", IntroBG, {
+    Size = UDim2.new(0, 400, 0, 100),
+    Position = UDim2.new(0.5, -200, 0.5, -50),
     BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextColor3 = Color3.fromRGB(235, 235, 245),
-    TextXAlignment = Enum.TextXAlignment.Left,
-    Text = "XR7 ~ Gaheem",
-}, top)
+    Font = Configs_HUB.Text_Font,
+    Text = "XR7~Gaheem",
+    TextSize = 35,
+    TextColor3 = Color3.fromRGB(255, 0, 0),
+    TextScaled = true
+})
 
-local close = new("TextButton", {
-    AnchorPoint = Vector2.new(1, 0.5),
-    Position = UDim2.new(1, -10, 0.5, 0),
-    Size = UDim2.fromOffset(30, 30),
-    BackgroundColor3 = Color3.fromRGB(45, 45, 55),
-    Text = "×",
-    TextSize = 20,
-    Font = Enum.Font.GothamBold,
-    TextColor3 = Color3.fromRGB(255, 120, 120),
-    AutoButtonColor = true,
-}, top)
-new("UICorner", { CornerRadius = UDim.new(0, 8) }, close)
-close.MouseButton1Click:Connect(function()
-    gui:Destroy()
+task.spawn(function()
+    while IntroGui and IntroGui.Parent do
+        CreateTween(IntroText, "TextColor3", Color3.fromRGB(40, 0, 0), 0.5, true)
+        CreateTween(IntroText, "TextColor3", Color3.fromRGB(255, 50, 50), 0.5, true)
+    end
 end)
 
-local sidebar = new("Frame", {
-    Position = UDim2.fromOffset(10, 54),
-    Size = UDim2.new(0, 160, 1, -64),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 28),
-    BorderSizePixel = 0,
-}, main)
-new("UICorner", { CornerRadius = UDim.new(0, 10) }, sidebar)
-new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, sidebar)
-new("UIPadding", {
-    PaddingTop = UDim.new(0, 8),
-    PaddingLeft = UDim.new(0, 8),
-    PaddingRight = UDim.new(0, 8),
-}, sidebar)
+task.wait(2)
+CreateTween(IntroBG, "BackgroundTransparency", 1, 0.5, false)
+CreateTween(IntroText, "TextTransparency", 1, 0.5, true)
+IntroGui:Destroy()
 
-local content = new("Frame", {
-    Position = UDim2.fromOffset(180, 54),
-    Size = UDim2.new(1, -190, 1, -64),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 28),
-    BorderSizePixel = 0,
-}, main)
-new("UICorner", { CornerRadius = UDim.new(0, 10) }, content)
+local OpenHubButton = Create("ImageButton", ScreenGui, {
+    Size = UDim2.new(0, 60, 0, 60),
+    Position = UDim2.new(0, 30, 0.5, -30),
+    BackgroundColor3 = Configs_HUB.Cor_Options,
+    Image = "rbxassetid://106176016019821",
+    Active = true,
+    Draggable = true,
+    AutoButtonColor = false
+})
+Corner(OpenHubButton, {CornerRadius = UDim.new(1, 0)})
+Stroke(OpenHubButton)
 
-local pages = {}
+local Menu_Notifi = Create("Frame", ScreenGui, {
+    Size = UDim2.new(0, 300, 1, 0),
+    Position = UDim2.new(1, 0, 0, 0),
+    AnchorPoint = Vector2.new(1, 0),
+    BackgroundTransparency = 1
+})
+Create("UIPadding", Menu_Notifi, {
+    PaddingLeft = UDim.new(0, 25),
+    PaddingTop = UDim.new(0, 25),
+    PaddingBottom = UDim.new(0, 50)
+})
+Create("UIListLayout", Menu_Notifi, {
+    Padding = UDim.new(0, 15),
+    VerticalAlignment = Enum.VerticalAlignment.Bottom
+})
 
-local function showPage(key)
-    for k, page in pairs(pages) do
-        page.Visible = (k == key)
-    end
-end
+function MakeNotifi(Configs)
+    local Title = Configs.Title or "جحيم ~VRX"
+    local text = Configs.Text or "Notification"
+    local timewait = Configs.Time or 5
 
-local function createPage(key, title)
-    local page = new("Frame", {
-        Name = key,
-        Size = UDim2.fromScale(1, 1),
+    local Frame1 = Create("Frame", Menu_Notifi, {
+        Size = UDim2.new(2, 0, 0, 0),
         BackgroundTransparency = 1,
-        Visible = false,
-    }, content)
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Name = "Title"
+    })
 
-    new("TextLabel", {
-        Position = UDim2.fromOffset(14, 10),
-        Size = UDim2.new(1, -28, 0, 26),
+    local Frame2 = Create("Frame", Frame1, {
+        Size = UDim2.new(0, Menu_Notifi.Size.X.Offset - 50, 0, 0),
+        BackgroundColor3 = Configs_HUB.Cor_Hub,
+        Position = UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y
+    })
+    Corner(Frame2)
+    Stroke(Frame2)
+
+    Create("TextLabel", Frame2, {
+        Size = UDim2.new(1, -40, 0, 25),
+        Font = Configs_HUB.Text_Font,
+        Text = Title,
+        TextSize = 16,
         BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 15,
-        TextColor3 = Color3.fromRGB(220, 220, 235),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         TextXAlignment = Enum.TextXAlignment.Left,
-        Text = title,
-    }, page)
+        Position = UDim2.new(0, 10, 0, 5)
+    })
 
-    local scroll = new("ScrollingFrame", {
-        Position = UDim2.fromOffset(12, 42),
-        Size = UDim2.new(1, -24, 1, -54),
+    Create("TextLabel", Frame2, {
+        Size = UDim2.new(1, -30, 0, 0),
+        Position = UDim2.new(0, 15, 0, 35),
+        TextSize = 14,
+        TextColor3 = Configs_HUB.Cor_Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Text = text,
+        Font = Configs_HUB.Text_Font,
         BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 4,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    }, page)
-    new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
-    new("UIPadding", { PaddingRight = UDim.new(0, 6) }, scroll)
+        TextWrapped = true
+    })
 
-    pages[key] = page
-    return scroll
-end
+    local FrameSize = Create("Frame", Frame2, {
+        Size = UDim2.new(1, -4, 0, 2),
+        BackgroundColor3 = Configs_HUB.Cor_Stroke,
+        Position = UDim2.new(0, 2, 0, 30),
+        BorderSizePixel = 0
+    })
+    Corner(FrameSize)
 
-local tabs = {
-    { key = "commands", title = "أوامر انفنتي" },
-    { key = "scripts",  title = "سكربتات خاصه" },
-    { key = "clan",     title = "سكربتات الكلان" },
-}
-
-for i, tab in ipairs(tabs) do
-    local btn = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 34),
-        BackgroundColor3 = Color3.fromRGB(32, 32, 40),
-        Text = tab.title,
-        TextSize = 14,
-        Font = Enum.Font.GothamMedium,
-        TextColor3 = Color3.fromRGB(220, 220, 235),
-        LayoutOrder = i,
-        AutoButtonColor = true,
-    }, sidebar)
-    new("UICorner", { CornerRadius = UDim.new(0, 8) }, btn)
-    btn.MouseButton1Click:Connect(function()
-        showPage(tab.key)
+    task.spawn(function()
+        CreateTween(FrameSize, "Size", UDim2.new(0, 0, 0, 2), timewait, true)
     end)
-end
 
-local cmdScroll = createPage("commands", "أوامر انفنتي")
-
-local commands = {
-    "Replicationlag 999",
-    "2022materials",
-    "clearerror",
-    "nofog",
-    "autokeypress",
-    "autokeypress nan",
-    "datalimit 660",
-    "backtrack 999",
-    "backtrack nan",
-    "antilag",
-    "antikick",
-    "antiafk",
-    "xray",
-}
-
-for i, cmd in ipairs(commands) do
-    local b = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 34),
-        BackgroundColor3 = Color3.fromRGB(32, 32, 40),
-        Text = cmd,
-        TextSize = 14,
-        Font = Enum.Font.Code,
-        TextColor3 = Color3.fromRGB(225, 225, 235),
-        LayoutOrder = i,
-        AutoButtonColor = true,
-    }, cmdScroll)
-    new("UICorner", { CornerRadius = UDim.new(0, 8) }, b)
-
-    b.MouseButton1Click:Connect(function()
-        if setClipboard(cmd) then
-            notify("تم النسخ: " .. cmd)
-        else
-            notify("تعذر النسخ")
+    task.spawn(function()
+        CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.5, true)
+        CreateTween(Frame2, "Position", UDim2.new(), 0.1, true)
+        task.wait(timewait)
+        if Frame2 and Frame2.Parent then
+            CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.1, true)
+            CreateTween(Frame2, "Position", UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0), 0.5, true)
+            Frame1:Destroy()
         end
     end)
 end
 
-local scrScroll = createPage("scripts", "سكربتات خاصه")
+function MakeWindow(Configs)
+    local title = Configs.Hub.Title or "جحيم ~VRX"
 
-local scripts = {
-    {
-        name = "سكربت1 انصاري",
-        code = 'loadstring(game:HttpGet("https://gist.githubusercontent.com/Yemenx/e976b6c7c681e67ebe0f31f88ebb6ac6/raw/536a222c673c23ba43ebe29dfcc29a53c8808eea/ANSRY.YAMEN.VAMPAIRE.lua"))()',
-    },
-    {
-        name = "سكربت 2 ابو عتب",
-        code = 'loadstring(game:HttpGet("https://gist.githubusercontent.com/yhmwd406-boop/2dd250fe58d63fabee981b085afc10c5/raw/8bf78e204f3f04cac8bea68e887a95f41c8b81c4/%25D8%25B3%25D9%2583%25D8%25B1%25D8%25A8%25D8%25AA%2520%25D8%25B9%25D8%25AF%25D8%25A7%25D8%25A7%25D8%25AA"))()',
-    },
-    {
-        name = "سكربت3 antikick",
-        code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AntiAFK-v-AntiKick-V3-v-Kick-Attempt-Logger-27977"))()',
-    },
-    {
-        name = "سكربت 4 تسجيل",
-        code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-NO9AT-SAMLAT-47637"))()',
-    },
-    {
-        name = "المفتاح AL-QYADAH~F7LK",
-        code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/professor-f7lk/CLAN_AL-QYADAH/refs/heads/main/README.md"))()',
-    },
-}
+    local Menu = Create("Frame", ScreenGui, {
+        BackgroundColor3 = Configs_HUB.Cor_Hub,
+        Position = UDim2.new(0.5, -500/2, 0.5, -320/2),
+        Active = true,
+        Draggable = true,
+        Size = UDim2.new(0, 500, 0, 320),
+        Visible = false
+    })
+    Corner(Menu)
+    Stroke(Menu)
 
-for i, s in ipairs(scripts) do
-    local b = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 36),
-        BackgroundColor3 = Color3.fromRGB(32, 32, 40),
-        Text = s.name,
-        TextSize = 14,
-        Font = Enum.Font.GothamMedium,
-        TextColor3 = Color3.fromRGB(225, 225, 235),
-        LayoutOrder = i,
-        AutoButtonColor = true,
-    }, scrScroll)
-    new("UICorner", { CornerRadius = UDim.new(0, 8) }, b)
+    OpenHubButton.MouseButton1Click:Connect(function()
+        Menu.Visible = not Menu.Visible
+    end)
 
-    b.MouseButton1Click:Connect(function()
-        local ok, err = pcall(function()
-            loadstring(s.code)()
+    local HubBGImage = Create("ImageLabel", Menu, {
+        Name = "HubBackground",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://118002360765644",
+        ImageTransparency = 0.3,
+        ScaleType = Enum.ScaleType.Crop,
+        ZIndex = 0
+    })
+    Corner(HubBGImage)
+
+    local TopBar = Create("Frame", Menu, {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 25),
+        ZIndex = 2
+    })
+
+    local RotatingImage = Create("ImageLabel", TopBar, {
+        Name = "RotatingLogo",
+        Size = UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new(0, 2, 0.5, 0),
+        AnchorPoint = Vector2.new(0, 0.5),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://106176016019821",
+        ZIndex = 3
+    })
+    Corner(RotatingImage, {CornerRadius = UDim.new(1, 0)})
+
+    local TitleLabel = Create("TextLabel", TopBar, {
+        Size = UDim2.new(1, -80, 1, 0),
+        Position = UDim2.new(0, 28, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        Text = title,
+        TextSize = 16,
+        TextColor3 = Color3.fromRGB(255, 40, 40),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 3
+    })
+
+    coroutine.wrap(function()
+        while TitleLabel and TitleLabel.Parent do
+            CreateTween(TitleLabel, "TextColor3", Color3.fromRGB(35, 0, 0), 0.8, true)
+            CreateTween(TitleLabel, "TextColor3", Color3.fromRGB(255, 40, 40), 0.8, true)
+        end
+    end)()
+
+    local ButtonsFrame = Create("Frame", TopBar, {
+        Size = UDim2.new(0, 40, 1, -5),
+        Position = UDim2.new(1, -10, 0, 2.5),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundTransparency = 1
+    })
+
+    local Minimize_BTN = Create("TextButton", ButtonsFrame, {
+        Text = "-",
+        TextColor3 = Configs_HUB.Cor_Text,
+        Size = UDim2.new(0.5, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextYAlignment = Enum.TextYAlignment.Bottom,
+        TextSize = 25
+    })
+
+    local IsMinimized = false
+    Minimize_BTN.MouseButton1Click:Connect(function()
+        IsMinimized = not IsMinimized
+        Minimize_BTN.Text = IsMinimized and "+" or "-"
+        local targetHeight = IsMinimized and 35 or 320
+        CreateTween(Menu, "Size", UDim2.new(0, 500, 0, targetHeight), 0.15, false)
+    end)
+
+    local Close_Button = Create("TextButton", ButtonsFrame, {
+        Text = "×",
+        TextYAlignment = Enum.TextYAlignment.Bottom,
+        TextColor3 = Configs_HUB.Cor_Text,
+        Size = UDim2.new(0.5, 0, 1, 0),
+        AnchorPoint = Vector2.new(1, 0),
+        Position = UDim2.new(1, 0, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextSize = 25
+    })
+
+    local function CreateClose()
+        IsMinimized = false
+        Minimize_BTN.Text = "-"
+        CreateTween(Menu, "Size", UDim2.new(0, 500, 0, 320), 0.3, false)
+
+        local CloseGui = Create("TextButton", Menu, {
+            BackgroundColor3 = Configs_HUB.Cor_Hub,
+            Size = UDim2.new(1, 0, 1, 0),
+            AutoButtonColor = false,
+            Text = "",
+            BackgroundTransparency = 0.5,
+            ZIndex = 5
+        })
+        Corner(CloseGui)
+
+        local CloseMenu = Create("Frame", CloseGui, {
+            Size = UDim2.new(0.7, 0, 0.7, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            BackgroundColor3 = Configs_HUB.Cor_Hub
+        })
+        Corner(CloseMenu)
+        Stroke(CloseMenu)
+
+        Create("TextLabel", CloseMenu, {
+            Size = UDim2.new(0.8, 0, 0.25, 0),
+            Text = "Are you sure you want to close this script?",
+            Position = UDim2.new(0.1, 0, 0.2, 0),
+            TextColor3 = Configs_HUB.Cor_Text,
+            Font = Configs_HUB.Text_Font,
+            TextScaled = true,
+            BackgroundTransparency = 1
+        })
+
+        local Confirm = Create("TextButton", CloseMenu, {
+            Size = UDim2.new(0.35, 0, 0.3, 0),
+            Position = UDim2.new(0.1, 0, 0.5, 0),
+            BackgroundColor3 = Configs_HUB.Cor_Hub,
+            Text = "Close Script",
+            Font = Configs_HUB.Text_Font,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 20
+        })
+        Corner(Confirm)
+        Stroke(Confirm)
+
+        local Cancel = Create("TextButton", CloseMenu, {
+            Size = UDim2.new(0.35, 0, 0.3, 0),
+            Position = UDim2.new(0.55, 0, 0.5, 0),
+            BackgroundColor3 = Configs_HUB.Cor_Hub,
+            Text = "Cancel",
+            Font = Configs_HUB.Text_Font,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 20
+        })
+        Corner(Cancel)
+        Stroke(Cancel)
+
+        Confirm.MouseButton1Click:Connect(function()
+            ScreenGui:Destroy()
         end)
-        if ok then
-            notify("تم تشغيل: " .. s.name)
-        else
-            notify("فشل التشغيل: " .. tostring(err))
-        end
-    end)
+        Cancel.MouseButton1Click:Connect(function()
+            CloseGui:Destroy()
+        end)
+    end
+
+    Close_Button.MouseButton1Click:Connect(CreateClose)
+
+    local line_Containers = Create("Frame", Menu, {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 2
+    })
+
+    local function Add_Line(props)
+        local line = Create("Frame", line_Containers, props)
+        line.BackgroundColor3 = Configs_HUB.Cor_Stroke
+        line.BorderSizePixel = 0
+    end
+
+    Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
+    Add_Line({Size = UDim2.new(0, 1, 1, -(TopBar.Size.Y.Offset + 1)), Position = UDim2.new(0, 140, 0, TopBar.Size.Y.Offset)})
+
+    return Menu
 end
 
-createPage("clan", "سكربتات الكلان")
+function MakeTabSystem(Menu)
+    local Sidebar = Create("Frame", Menu, {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 6, 0, 30),
+        Size = UDim2.new(0, 130, 1, -36),
+        ZIndex = 2
+    })
+    Create("UIListLayout", Sidebar, {
+        Padding = UDim.new(0, 6),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    })
 
-showPage("commands")
+    local Content = Create("Frame", Menu, {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 145, 0, 30),
+        Size = UDim2.new(1, -151, 1, -36),
+        ZIndex = 2
+    })
+
+    local Pages = {}
+    local CurrentTab = nil
+
+    local function ShowPage(key)
+        for k, page in pairs(Pages) do
+            page.Visible = (k == key)
+        end
+        CurrentTab = key
+    end
+
+    local function MakeTab(tabKey, tabTitle)
+        local btn = Create("TextButton", Sidebar, {
+            Size = UDim2.new(1, 0, 0, 30),
+            BackgroundColor3 = Configs_HUB.Cor_Options,
+            Text = tabTitle,
+            Font = Configs_HUB.Text_Font,
+            TextColor3 = Configs_HUB.Cor_Text,
+            TextSize = 13,
+            AutoButtonColor = false
+        })
+        Corner(btn)
+        Stroke(btn)
+
+        local page = Create("Frame", Content, {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Visible = false
+        })
+
+        local scroll = Create("ScrollingFrame", page, {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 4,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y
+        })
+        Create("UIListLayout", scroll, {
+            Padding = UDim.new(0, 6),
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+        Create("UIPadding", scroll, {
+            PaddingRight = UDim.new(0, 8)
+        })
+
+        Pages[tabKey] = page
+
+        btn.MouseButton1Click:Connect(function()
+            ShowPage(tabKey)
+        end)
+
+        return scroll
+    end
+
+    local function AddButton(parent, text, callback)
+        local btn = Create("TextButton", parent, {
+            Size = UDim2.new(1, 0, 0, 32),
+            BackgroundColor3 = Configs_HUB.Cor_Options,
+            Text = text,
+            Font = Configs_HUB.Text_Font,
+            TextColor3 = Configs_HUB.Cor_Text,
+            TextSize = 13,
+            AutoButtonColor = false
+        })
+        Corner(btn)
+        Stroke(btn)
+        btn.MouseButton1Click:Connect(callback)
+        return btn
+    end
+
+    local CmdScroll = MakeTab("commands", "أوامر انفنتي")
+
+    local Commands = {
+        "Replicationlag 999",
+        "2022materials",
+        "clearerror",
+        "nofog",
+        "autokeypress",
+        "autokeypress nan",
+        "datalimit 660",
+        "backtrack 999",
+        "backtrack nan",
+        "antilag",
+        "antikick",
+        "antiafk",
+        "xray",
+    }
+
+    for _, cmd in ipairs(Commands) do
+        AddButton(CmdScroll, cmd, function()
+            local ok = pcall(function()
+                if setclipboard then
+                    setclipboard(cmd)
+                elseif toclipboard then
+                    toclipboard(cmd)
+                elseif Clipboard and Clipboard.set then
+                    Clipboard.set(cmd)
+                else
+                    error("no clipboard")
+                end
+            end)
+            if ok then
+                MakeNotifi({Title = "تم النسخ", Text = cmd, Time = 2})
+            else
+                MakeNotifi({Title = "خطأ", Text = "المنفذ لا يدعم الحافظة", Time = 3})
+            end
+        end)
+    end
+
+    local ScrScroll = MakeTab("scripts", "سكربتات خاصه")
+
+    local Scripts = {
+        {
+            name = "سكربت1 انصاري",
+            code = 'loadstring(game:HttpGet("https://gist.githubusercontent.com/Yemenx/e976b6c7c681e67ebe0f31f88ebb6ac6/raw/536a222c673c23ba43ebe29dfcc29a53c8808eea/ANSRY.YAMEN.VAMPAIRE.lua"))()',
+        },
+        {
+            name = "سكربت 2 ابو عتب",
+            code = 'loadstring(game:HttpGet("https://gist.githubusercontent.com/yhmwd406-boop/2dd250fe58d63fabee981b085afc10c5/raw/8bf78e204f3f04cac8bea68e887a95f41c8b81c4/%25D8%25B3%25D9%2583%25D8%25B1%25D8%25A8%25D8%25AA%2520%25D8%25B9%25D8%25AF%25D8%25A7%25D8%25A7%25D8%25AA"))()',
+        },
+        {
+            name = "سكربت3 antikick",
+            code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AntiAFK-v-AntiKick-V3-v-Kick-Attempt-Logger-27977"))()',
+        },
+        {
+            name = "سكربت 4 تسجيل",
+            code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-NO9AT-SAMLAT-47637"))()',
+        },
+        {
+            name = "المفتاح AL-QYADAH~F7LK",
+            code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/professor-f7lk/CLAN_AL-QYADAH/refs/heads/main/README.md"))()',
+        },
+    }
+
+    for _, s in ipairs(Scripts) do
+        AddButton(ScrScroll, s.name, function()
+            local ok, err = pcall(function()
+                loadstring(s.code)()
+            end)
+            if ok then
+                MakeNotifi({Title = "تم التشغيل", Text = s.name, Time = 2})
+            else
+                MakeNotifi({Title = "فشل التشغيل", Text = tostring(err), Time = 3})
+            end
+        end)
+    end
+
+    MakeTab("clan", "سكربتات الكلان")
+
+    ShowPage("commands")
+end
+
+local Window = MakeWindow({ Hub = { Title = "XR7 ~ Gaheem" } })
+MakeTabSystem(Window)
