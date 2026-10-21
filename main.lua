@@ -81,147 +81,197 @@ end
 local existing = CoreGui:FindFirstChild("REDz HUB library")
 if existing then existing:Destroy() end
 
-local ScreenGui = Create("ScreenGui", CoreGui, {
-    Name = "REDz HUB library",
-    ResetOnSpawn = false,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-})
+local currentRank = {text = "عضو", color = Color3.fromRGB(255, 255, 255)}
 
-local IntroGui = Create("ScreenGui", CoreGui, {
-    Name = "XR7_Intro",
-    ResetOnSpawn = false,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-})
-
-local IntroBG = Create("Frame", IntroGui, {
-    Size = UDim2.new(1, 0, 1, 0),
-    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-    BorderSizePixel = 0
-})
-
-local IntroText = Create("TextLabel", IntroBG, {
-    Size = UDim2.new(0, 400, 0, 100),
-    Position = UDim2.new(0.5, -200, 0.5, -50),
-    BackgroundTransparency = 1,
-    Font = Configs_HUB.Text_Font,
-    Text = "XR7~Gaheem",
-    TextSize = 35,
-    TextColor3 = Color3.fromRGB(255, 0, 0),
-    TextScaled = true
-})
-
-task.spawn(function()
-    while IntroGui and IntroGui.Parent do
-        CreateTween(IntroText, "TextColor3", Color3.fromRGB(40, 0, 0), 0.5, true)
-        CreateTween(IntroText, "TextColor3", Color3.fromRGB(255, 50, 50), 0.5, true)
-    end
-end)
-
-task.wait(2)
-CreateTween(IntroBG, "BackgroundTransparency", 1, 0.5, false)
-CreateTween(IntroText, "TextTransparency", 1, 0.5, true)
-IntroGui:Destroy()
-
-local OpenHubButton = Create("ImageButton", ScreenGui, {
-    Size = UDim2.new(0, 60, 0, 60),
-    Position = UDim2.new(0, 30, 0.5, -30),
-    BackgroundColor3 = Configs_HUB.Cor_Options,
-    Image = "rbxassetid://106176016019821",
-    Active = true,
-    Draggable = true,
-    AutoButtonColor = false
-})
-Corner(OpenHubButton, {CornerRadius = UDim.new(1, 0)})
-Stroke(OpenHubButton)
-
-local Menu_Notifi = Create("Frame", ScreenGui, {
-    Size = UDim2.new(0, 300, 1, 0),
-    Position = UDim2.new(1, 0, 0, 0),
-    AnchorPoint = Vector2.new(1, 0),
-    BackgroundTransparency = 1
-})
-Create("UIPadding", Menu_Notifi, {
-    PaddingLeft = UDim.new(0, 25),
-    PaddingTop = UDim.new(0, 25),
-    PaddingBottom = UDim.new(0, 50)
-})
-Create("UIListLayout", Menu_Notifi, {
-    Padding = UDim.new(0, 15),
-    VerticalAlignment = Enum.VerticalAlignment.Bottom
-})
-
-function MakeNotifi(Configs)
-    local Title = Configs.Title or "جحيم ~VRX"
-    local text = Configs.Text or "Notification"
-    local timewait = Configs.Time or 5
-
-    local Frame1 = Create("Frame", Menu_Notifi, {
-        Size = UDim2.new(2, 0, 0, 0),
-        BackgroundTransparency = 1,
-        AutomaticSize = Enum.AutomaticSize.Y,
-        Name = "Title"
-    })
-
-    local Frame2 = Create("Frame", Frame1, {
-        Size = UDim2.new(0, Menu_Notifi.Size.X.Offset - 50, 0, 0),
-        BackgroundColor3 = Configs_HUB.Cor_Hub,
-        Position = UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0),
-        AutomaticSize = Enum.AutomaticSize.Y
-    })
-    Corner(Frame2)
-    Stroke(Frame2)
-
-    Create("TextLabel", Frame2, {
-        Size = UDim2.new(1, -40, 0, 25),
-        Font = Configs_HUB.Text_Font,
-        Text = Title,
-        TextSize = 16,
-        BackgroundTransparency = 1,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Position = UDim2.new(0, 10, 0, 5)
-    })
-
-    Create("TextLabel", Frame2, {
-        Size = UDim2.new(1, -30, 0, 0),
-        Position = UDim2.new(0, 15, 0, 35),
-        TextSize = 14,
-        TextColor3 = Configs_HUB.Cor_Text,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Top,
-        AutomaticSize = Enum.AutomaticSize.Y,
-        Text = text,
-        Font = Configs_HUB.Text_Font,
-        BackgroundTransparency = 1,
-        TextWrapped = true
-    })
-
-    local FrameSize = Create("Frame", Frame2, {
-        Size = UDim2.new(1, -4, 0, 2),
-        BackgroundColor3 = Configs_HUB.Cor_Stroke,
-        Position = UDim2.new(0, 2, 0, 30),
-        BorderSizePixel = 0
-    })
-    Corner(FrameSize)
-
-    task.spawn(function()
-        CreateTween(FrameSize, "Size", UDim2.new(0, 0, 0, 2), timewait, true)
-    end)
-
-    task.spawn(function()
-        CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.5, true)
-        CreateTween(Frame2, "Position", UDim2.new(), 0.1, true)
-        task.wait(timewait)
-        if Frame2 and Frame2.Parent then
-            CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.1, true)
-            CreateTween(Frame2, "Position", UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0), 0.5, true)
-            Frame1:Destroy()
-        end
-    end)
+local function ApplyRank()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+    local old = head:FindFirstChild("RankBillboard")
+    if old then old:Destroy() end
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "RankBillboard"
+    bb.Size = UDim2.new(0, 200, 0, 50)
+    bb.StudsOffset = Vector3.new(0, 2.5, 0)
+    bb.AlwaysOnTop = true
+    bb.MaxDistance = 300
+    bb.Parent = head
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = currentRank.text
+    label.TextColor3 = currentRank.color
+    label.TextStrokeTransparency = 0
+    local sum = label.TextColor3.R + label.TextColor3.G + label.TextColor3.B
+    label.TextStrokeColor3 = (sum < 1.5) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(0, 0, 0)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextScaled = true
+    label.Parent = bb
 end
 
-function MakeWindow(Configs)
-    local title = Configs.Hub.Title or "جحيم ~VRX"
+local function SetRank(text, color)
+    currentRank.text = text
+    currentRank.color = color
+    ApplyRank()
+end
+
+local function HandleChar(char)
+    char:WaitForChild("Head", 10)
+    task.wait(0.3)
+    ApplyRank()
+end
+
+if LocalPlayer.Character then
+    task.spawn(HandleChar, LocalPlayer.Character)
+end
+
+LocalPlayer.CharacterAdded:Connect(HandleChar)
+
+local started = false
+
+local function StartScript()
+    if started then return end
+    started = true
+
+    local ScreenGui = Create("ScreenGui", CoreGui, {
+        Name = "REDz HUB library",
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+
+    local IntroGui = Create("ScreenGui", CoreGui, {
+        Name = "𝑮𝑮_Intro",
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+
+    local IntroBG = Create("Frame", IntroGui, {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BorderSizePixel = 0
+    })
+
+    local IntroText = Create("TextLabel", IntroBG, {
+        Size = UDim2.new(0, 400, 0, 100),
+        Position = UDim2.new(0.5, -200, 0.5, -50),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        Text = "𝑮𝑮~𝒍𝒂𝒏𝒔𝒉𝒆𝒓",
+        TextSize = 35,
+        TextColor3 = Color3.fromRGB(255, 0, 0),
+        TextScaled = true
+    })
+
+    task.spawn(function()
+        while IntroGui and IntroGui.Parent do
+            CreateTween(IntroText, "TextColor3", Color3.fromRGB(40, 0, 0), 0.5, true)
+            CreateTween(IntroText, "TextColor3", Color3.fromRGB(255, 50, 50), 0.5, true)
+        end
+    end)
+
+    task.wait(2)
+    CreateTween(IntroBG, "BackgroundTransparency", 1, 0.5, false)
+    CreateTween(IntroText, "TextTransparency", 1, 0.5, true)
+    IntroGui:Destroy()
+
+    local OpenHubButton = Create("ImageButton", ScreenGui, {
+        Size = UDim2.new(0, 60, 0, 60),
+        Position = UDim2.new(0, 30, 0.5, -30),
+        BackgroundColor3 = Configs_HUB.Cor_Options,
+        Image = "rbxassetid://106176016019821",
+        Active = true,
+        Draggable = true,
+        AutoButtonColor = false
+    })
+    Corner(OpenHubButton, {CornerRadius = UDim.new(1, 0)})
+    Stroke(OpenHubButton)
+
+    local Menu_Notifi = Create("Frame", ScreenGui, {
+        Size = UDim2.new(0, 300, 1, 0),
+        Position = UDim2.new(1, 0, 0, 0),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundTransparency = 1
+    })
+    Create("UIPadding", Menu_Notifi, {
+        PaddingLeft = UDim.new(0, 25),
+        PaddingTop = UDim.new(0, 25),
+        PaddingBottom = UDim.new(0, 50)
+    })
+    Create("UIListLayout", Menu_Notifi, {
+        Padding = UDim.new(0, 15),
+        VerticalAlignment = Enum.VerticalAlignment.Bottom
+    })
+
+    local function MakeNotifi(Configs)
+        local Title = Configs.Title or "𝑮𝑮 ~ 𝒍𝒂𝒏𝒔𝒉𝒆𝒓"
+        local text = Configs.Text or "Notification"
+        local timewait = Configs.Time or 5
+
+        local Frame1 = Create("Frame", Menu_Notifi, {
+            Size = UDim2.new(2, 0, 0, 0),
+            BackgroundTransparency = 1,
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Name = "Title"
+        })
+
+        local Frame2 = Create("Frame", Frame1, {
+            Size = UDim2.new(0, Menu_Notifi.Size.X.Offset - 50, 0, 0),
+            BackgroundColor3 = Configs_HUB.Cor_Hub,
+            Position = UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y
+        })
+        Corner(Frame2)
+        Stroke(Frame2)
+
+        Create("TextLabel", Frame2, {
+            Size = UDim2.new(1, -40, 0, 25),
+            Font = Configs_HUB.Text_Font,
+            Text = Title,
+            TextSize = 16,
+            BackgroundTransparency = 1,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Position = UDim2.new(0, 10, 0, 5)
+        })
+
+        Create("TextLabel", Frame2, {
+            Size = UDim2.new(1, -30, 0, 0),
+            Position = UDim2.new(0, 15, 0, 35),
+            TextSize = 14,
+            TextColor3 = Configs_HUB.Cor_Text,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Top,
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Text = text,
+            Font = Configs_HUB.Text_Font,
+            BackgroundTransparency = 1,
+            TextWrapped = true
+        })
+
+        local FrameSize = Create("Frame", Frame2, {
+            Size = UDim2.new(1, -4, 0, 2),
+            BackgroundColor3 = Configs_HUB.Cor_Stroke,
+            Position = UDim2.new(0, 2, 0, 30),
+            BorderSizePixel = 0
+        })
+        Corner(FrameSize)
+
+        task.spawn(function()
+            CreateTween(FrameSize, "Size", UDim2.new(0, 0, 0, 2), timewait, true)
+        end)
+
+        task.spawn(function()
+            CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.5, true)
+            CreateTween(Frame2, "Position", UDim2.new(), 0.1, true)
+            task.wait(timewait)
+            if Frame2 and Frame2.Parent then
+                CreateTween(Frame2, "Position", UDim2.new(0, -20, 0, 0), 0.1, true)
+                CreateTween(Frame2, "Position", UDim2.new(0, Menu_Notifi.Size.X.Offset, 0, 0), 0.5, true)
+                Frame1:Destroy()
+            end
+        end)
+    end
 
     local Menu = Create("Frame", ScreenGui, {
         BackgroundColor3 = Configs_HUB.Cor_Hub,
@@ -271,7 +321,7 @@ function MakeWindow(Configs)
         Position = UDim2.new(0, 28, 0, 0),
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
-        Text = title,
+        Text = "𝑮𝑮 ~ 𝒍𝒂𝒏𝒔𝒉𝒆𝒓",
         TextSize = 16,
         TextColor3 = Color3.fromRGB(255, 40, 40),
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -405,10 +455,6 @@ function MakeWindow(Configs)
     Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
     Add_Line({Size = UDim2.new(0, 1, 1, -(TopBar.Size.Y.Offset + 1)), Position = UDim2.new(0, 140, 0, TopBar.Size.Y.Offset)})
 
-    return Menu
-end
-
-function MakeTabSystem(Menu)
     local Sidebar = Create("Frame", Menu, {
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 6, 0, 30),
@@ -428,16 +474,17 @@ function MakeTabSystem(Menu)
     })
 
     local Pages = {}
-    local CurrentTab = nil
+    local tabCounter = 0
+    local btnCounter = 0
 
     local function ShowPage(key)
         for k, page in pairs(Pages) do
             page.Visible = (k == key)
         end
-        CurrentTab = key
     end
 
     local function MakeTab(tabKey, tabTitle)
+        tabCounter = tabCounter + 1
         local btn = Create("TextButton", Sidebar, {
             Size = UDim2.new(1, 0, 0, 30),
             BackgroundColor3 = Configs_HUB.Cor_Options,
@@ -445,7 +492,8 @@ function MakeTabSystem(Menu)
             Font = Configs_HUB.Text_Font,
             TextColor3 = Configs_HUB.Cor_Text,
             TextSize = 13,
-            AutoButtonColor = false
+            AutoButtonColor = false,
+            LayoutOrder = tabCounter
         })
         Corner(btn)
         Stroke(btn)
@@ -482,6 +530,7 @@ function MakeTabSystem(Menu)
     end
 
     local function AddButton(parent, text, callback)
+        btnCounter = btnCounter + 1
         local btn = Create("TextButton", parent, {
             Size = UDim2.new(1, 0, 0, 32),
             BackgroundColor3 = Configs_HUB.Cor_Options,
@@ -489,7 +538,8 @@ function MakeTabSystem(Menu)
             Font = Configs_HUB.Text_Font,
             TextColor3 = Configs_HUB.Cor_Text,
             TextSize = 13,
-            AutoButtonColor = false
+            AutoButtonColor = false,
+            LayoutOrder = btnCounter
         })
         Corner(btn)
         Stroke(btn)
@@ -574,10 +624,190 @@ function MakeTabSystem(Menu)
         end)
     end
 
-    MakeTab("clan", "سكربتات الكلان")
+    local RankScroll = MakeTab("ranks", "رتب")
+
+    local function AddRankSection(rankName, rankColor, password, isMember)
+        btnCounter = btnCounter + 1
+        local row = Create("Frame", RankScroll, {
+            Size = UDim2.new(1, 0, 0, 36),
+            BackgroundColor3 = Configs_HUB.Cor_Options,
+            LayoutOrder = btnCounter
+        })
+        Corner(row)
+        Stroke(row)
+
+        local nameLabel = Create("TextLabel", row, {
+            Size = UDim2.new(0.28, 0, 1, 0),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1,
+            Text = rankName,
+            Font = Configs_HUB.Text_Font,
+            TextColor3 = rankColor,
+            TextSize = 14
+        })
+        if rankColor == Color3.fromRGB(0, 0, 0) then
+            local s = Create("UIStroke", nameLabel)
+            s.Color = Color3.fromRGB(255, 255, 255)
+            s.Thickness = 1
+        end
+
+        if not isMember then
+            local tb = Create("TextBox", row, {
+                Size = UDim2.new(0.42, -10, 0.7, 0),
+                Position = UDim2.new(0.29, 0, 0.15, 0),
+                BackgroundColor3 = Configs_HUB.Cor_Hub,
+                PlaceholderText = "كلمة السر...",
+                Font = Configs_HUB.Text_Font,
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                PlaceholderColor3 = Configs_HUB.Cor_DarkText,
+                TextSize = 12,
+                Text = "",
+                ClearTextOnFocus = false
+            })
+            Corner(tb)
+            Stroke(tb)
+
+            local btn = Create("TextButton", row, {
+                Size = UDim2.new(0.28, -10, 0.7, 0),
+                Position = UDim2.new(0.72, 0, 0.15, 0),
+                BackgroundColor3 = Configs_HUB.Cor_Hub,
+                Text = "تفعيل",
+                Font = Configs_HUB.Text_Font,
+                TextColor3 = Configs_HUB.Cor_Text,
+                TextSize = 13,
+                AutoButtonColor = false
+            })
+            Corner(btn)
+            Stroke(btn)
+
+            btn.MouseButton1Click:Connect(function()
+                if tb.Text == password then
+                    SetRank(rankName, rankColor)
+                    MakeNotifi({Title = "تم التفعيل", Text = "رتبتك الآن: " .. rankName, Time = 2})
+                else
+                    MakeNotifi({Title = "خطأ", Text = "كلمة السر غير صحيحة", Time = 2})
+                end
+            end)
+        else
+            local btn = Create("TextButton", row, {
+                Size = UDim2.new(0.42, -10, 0.7, 0),
+                Position = UDim2.new(0.29, 0, 0.15, 0),
+                BackgroundColor3 = Configs_HUB.Cor_Hub,
+                Text = "بدون كلمة سر",
+                Font = Configs_HUB.Text_Font,
+                TextColor3 = Configs_HUB.Cor_Text,
+                TextSize = 12,
+                AutoButtonColor = false
+            })
+            Corner(btn)
+            Stroke(btn)
+            btn.MouseButton1Click:Connect(function()
+                SetRank(rankName, rankColor)
+                MakeNotifi({Title = "تم التفعيل", Text = "رتبتك الآن: " .. rankName, Time = 2})
+            end)
+        end
+    end
+
+    AddRankSection("مالك", Color3.fromRGB(0, 0, 0), "6767", false)
+    AddRankSection("أدمن", Color3.fromRGB(255, 0, 0), "scopa", false)
+    AddRankSection("عضو", Color3.fromRGB(255, 255, 255), nil, true)
 
     ShowPage("commands")
 end
 
-local Window = MakeWindow({ Hub = { Title = "XR7 ~ Gaheem" } })
-MakeTabSystem(Window)
+local PasswordGui = Create("ScreenGui", CoreGui, {
+    Name = "𝑮𝑮_PasswordGate",
+    ResetOnSpawn = false,
+    DisplayOrder = 999,
+    IgnoreGuiInset = true
+})
+
+local pBg = Create("Frame", PasswordGui, {
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BackgroundTransparency = 0.3,
+    BorderSizePixel = 0
+})
+
+local pBox = Create("Frame", pBg, {
+    Size = UDim2.new(0, 380, 0, 195),
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    BackgroundColor3 = Configs_HUB.Cor_Hub,
+    BorderSizePixel = 0
+})
+Corner(pBox)
+Stroke(pBox)
+
+Create("TextLabel", pBox, {
+    Size = UDim2.new(1, 0, 0, 30),
+    Position = UDim2.new(0, 0, 0, 12),
+    BackgroundTransparency = 1,
+    Text = "𝑮𝑮 ~ 𝒍𝒂𝒏𝒔𝒉𝒆𝒓",
+    Font = Configs_HUB.Text_Font,
+    TextColor3 = Color3.fromRGB(255, 40, 40),
+    TextSize = 20
+})
+
+Create("TextLabel", pBox, {
+    Size = UDim2.new(1, 0, 0, 20),
+    Position = UDim2.new(0, 0, 0, 48),
+    BackgroundTransparency = 1,
+    Text = "أدخل كلمة السر للدخول",
+    Font = Configs_HUB.Text_Font,
+    TextColor3 = Configs_HUB.Cor_DarkText,
+    TextSize = 13
+})
+
+local pTextBox = Create("TextBox", pBox, {
+    Size = UDim2.new(0.8, 0, 0, 34),
+    Position = UDim2.new(0.1, 0, 0, 78),
+    BackgroundColor3 = Configs_HUB.Cor_Options,
+    PlaceholderText = "كلمة السر...",
+    Font = Configs_HUB.Text_Font,
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    PlaceholderColor3 = Configs_HUB.Cor_DarkText,
+    TextSize = 14,
+    Text = "",
+    ClearTextOnFocus = true
+})
+Corner(pTextBox)
+Stroke(pTextBox)
+
+local pStatus = Create("TextLabel", pBox, {
+    Size = UDim2.new(1, 0, 0, 20),
+    Position = UDim2.new(0, 0, 0, 116),
+    BackgroundTransparency = 1,
+    Text = "",
+    Font = Configs_HUB.Text_Font,
+    TextColor3 = Color3.fromRGB(255, 80, 80),
+    TextSize = 12
+})
+
+local pSubmit = Create("TextButton", pBox, {
+    Size = UDim2.new(0.5, 0, 0, 34),
+    Position = UDim2.new(0.25, 0, 0, 145),
+    BackgroundColor3 = Configs_HUB.Cor_Options,
+    Text = "تأكيد",
+    Font = Configs_HUB.Text_Font,
+    TextColor3 = Configs_HUB.Cor_Text,
+    TextSize = 15,
+    AutoButtonColor = false
+})
+Corner(pSubmit)
+Stroke(pSubmit)
+
+local function TryUnlock()
+    if pTextBox.Text == "GG-on-top-forever" then
+        PasswordGui:Destroy()
+        StartScript()
+    else
+        pStatus.Text = "كلمة السر غير صحيحة"
+        pTextBox.Text = ""
+    end
+end
+
+pSubmit.MouseButton1Click:Connect(TryUnlock)
+pTextBox.FocusLost:Connect(function(enter)
+    if enter then TryUnlock() end
+end)
